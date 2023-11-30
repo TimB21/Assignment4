@@ -512,7 +512,8 @@ if (isset($_POST['submit'])) {
     }
 
     echo '</TABLE>'; 
-}
+} 
+// Code for processing the query and displaying the results
 ?>
 <TR><TD><INPUT type="submit" name="submit" id="submit" value="Search"></TD> 
 </FORM>	</TR>
