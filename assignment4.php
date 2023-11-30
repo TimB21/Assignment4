@@ -206,7 +206,9 @@ $amenities[] = "toilet";
 <FORM name="searchform" action="assignment4.php" method="POST">
 <TABLE>
 
-<?php 
+<?php   
+if (!isset($_POST['submit'])) {
+// create array to store the fields with single textboxes
 $fields = [
     "name",
     "description",
@@ -216,6 +218,7 @@ $fields = [
     "property_type"
 ];
 
+// loop to create html code for each field with a single textbox
 foreach ($fields as $field) {
     if (strpos($field, 'address.') === 0) {
         // Handle fields within the "address" category
@@ -239,6 +242,7 @@ foreach ($fields as $field) {
     }
 } 
 
+// create array to store the fields with two text boxes for a minimum and maximum value 
 $fields = [
     "accommodates",
     "bedrooms",
@@ -248,6 +252,7 @@ $fields = [
     "cleaning_fee"
 ];
 
+// create loop to create html code for each of the fields with two text boxes 
 foreach ($fields as $field) {
     echo '<tr>';
     echo '<td align="right">' . $field . '</td>';
@@ -257,6 +262,7 @@ foreach ($fields as $field) {
     echo '</tr>';
 } 
 
+// create array for entities in the data which have multiple radioboxes
 $fieldValues = [
     "address.country" => ["Any", "Australia", "Brazil", "Canada", "China", "Hong Kong", "Portugal", "Spain", "Turkey", "United States"],
     "room_type" => ["Any", "Entire home/apt", "Private room", "Shared room"],
@@ -264,12 +270,15 @@ $fieldValues = [
     "cancellation_policy" => ["Any", "flexible", "moderate", "strict_14_with_grace_period", "super_strict_30", "super_strict_60"]
 ];
 
+// loop through entities and create radio boxes for the different options
 foreach ($fieldValues as $field => $values) {
     echo '<tr>';
     echo '<td align="right">' . $field . '</td>';
-    echo '<td>';
+    echo '<td>'; 
+    // creates the radio boxes for each of the values within the entity 
     foreach ($values as $value) {
         echo '<input type="radio" name="' . str_replace('.', '_', $field) . '" id="' . str_replace('.', '_', $field) . '" value="' . $value . '"';
+        // check the any value       
         if ($value === "Any") {
             echo ' checked';
         }
@@ -301,8 +310,15 @@ echo '</div>';
 // Start a new table for the sorting criteria
 echo '<TABLE>';
 
-$criteria = ['accommodates', 'bedrooms', 'bathrooms', 'beds', 'price', 'cleaning_fee'];
+// create an array for the sorting criteria 
+$criteria = ["accommodates", 
+             "bedrooms", 
+             "bathrooms", 
+             "beds", 
+             "price", 
+            "cleaning_fee"];
 
+// loop through the sorting criteria and create radio boxes for different sorting options
 foreach ($criteria as $criterion) {
     $label = ucwords(str_replace('_', ' ', $criterion));
 
@@ -316,8 +332,188 @@ foreach ($criteria as $criterion) {
     echo '</tr>';
 }
 
-echo '</TABLE>';
+echo '</TABLE>'; 
+}
 ?> 
+
+<?php 
+if (isset($_POST['submit'])) {
+    $fields = [
+        "name",
+        "description",
+        "address.street",
+        "address.suburb",
+        "transit",
+        "property_type"
+    ];
+
+    foreach ($fields as $field) {
+        if (strpos($field, 'address.') === 0) {
+            $subcategory = str_replace('address.', '', $field);
+            $category = 'address'; 
+            echo '<tr>';
+            echo '  <td align="right">' . $subcategory . '</td>';
+            echo '  <td>';
+            echo '    <input type="text" size="30" name="' . $category . '_' . $subcategory . '" id="' . $category . '_' . $subcategory . '" value="' . htmlspecialchars($_REQUEST[$category . '_' . $subcategory] ?? '') . '" maxlength="2048">';
+            echo '  </td>';
+            echo '</tr>';
+            echo "\n";
+        } else {
+            $category = $field;  
+            echo '<tr>';
+            echo '  <td align="right">' . $category . '</td>';
+            echo '  <td>';
+            echo '    <input type="text" size="30" name="' . $category . '" id="' . $category . '" value="' . htmlspecialchars($_REQUEST[$category] ?? '') . '" maxlength="2048">';
+            echo '  </td>';
+            echo '</tr>';
+        }
+    } 
+
+    $fields = [
+        "accommodates",
+        "bedrooms",
+        "bathrooms",
+        "beds",
+        "price",
+        "cleaning_fee"
+    ];
+
+    foreach ($fields as $field) {
+        echo '<tr>';
+        echo '  <td align="right">' . $field . '</td>';
+        echo '  <td>';
+    
+        // Check if 'low' value is not empty
+    if (!empty($_REQUEST['low' . $field])) {
+        // Check if 'low' value is a valid number
+        if (is_numeric($_REQUEST['low' . $field])) {
+            $lowValue = htmlspecialchars($_REQUEST['low' . $field]);
+
+            // Ensure low is not less than 0
+            if ($lowValue <= 0) {
+                echo '<span style="color: red;">Low value cannot be less than or equal 0.</span>';
+                $lowValue = '';
+            }
+        } else {
+            echo '<span style="color: red;">Low value must be numeric.</span>';
+            $lowValue = '';
+        }
+    } else {
+        $lowValue = '';
+    }
+
+    // Check if 'hi' value is not empty
+    if (!empty($_REQUEST['hi' . $field])) {
+        // Check if 'hi' value is a valid number
+        if (is_numeric($_REQUEST['hi' . $field])) {
+            $hiValue = htmlspecialchars($_REQUEST['hi' . $field]);
+
+            // Ensure high is not less than 0
+            if ($hiValue <= 0) {
+                echo '<span style="color: red;">High value cannot be less than or equal to 0.</span>';
+                $hiValue = '';
+            }
+        } else {
+            echo '<span style="color: red;">High value must be numeric.</span>';
+            $hiValue = '';
+        }
+
+        // Ensure low is not greater than high
+        if ($lowValue !== '' && $hiValue !== '' && $lowValue > $hiValue) {
+            echo '<span style="color: red;">High value cannot be less than the low value.</span>';
+            $hiValue = '';
+        }
+    } else {
+        $hiValue = '';
+    }
+    
+        echo '    between <input type="text" size="3" name="low' . $field . '" id="low' . $field . '" value="' . $lowValue . '" maxlength="5">';
+        echo ' and <input type="text" size="3" name="hi' . $field . '" id="hi' . $field . '" value="' . $hiValue . '" maxlength="5">';
+    
+        echo '  </td>';
+        echo '</tr>';
+        echo "\n"; 
+    }
+
+    $fieldValues = [
+        "address.country" => ["Any", "Australia", "Brazil", "Canada", "China", "Hong Kong", "Portugal", "Spain", "Turkey", "United States"],
+        "room_type" => ["Any", "Entire home/apt", "Private room", "Shared room"],
+        "bed_type" => ["Any", "Futon", "Airbed", "Pull-out Sofa", "Real Bed", "Couch"],
+        "cancellation_policy" => ["Any", "flexible", "moderate", "strict_14_with_grace_period", "super_strict_30", "super_strict_60"]
+    ];
+
+    foreach ($fieldValues as $field => $values) {
+        echo '<tr>';
+        echo '  <td align="right">' . $field . '</td>';
+        echo '  <td>';
+        foreach ($values as $value) {
+            echo '    <input type="radio" name="' . str_replace('.', '_', $field) . '" id="' . str_replace('.', '_', $field) . '" value="' . $value . '"';
+            if ($_REQUEST[str_replace('.', '_', $field)] === $value) {
+                echo ' checked';
+            }
+            echo '>' . $value . ', ';
+        }
+        echo '  </td>';
+        echo '</tr>';
+        echo "\n";
+    }
+    
+    echo '</TABLE>'; // Close the existing table after the amenities section
+
+    echo 'Amenities';  
+    echo '<div id="div1" style="height: 100px;position:relative;">';
+    echo '  <div id="div2" style="max-height:100%;overflow:auto;border:1px solid black;">';
+
+    foreach ($amenities as $amenity) {
+        $id = str_replace(' ', '_', $amenity);
+        $name = $id;
+        $value = "yes";
+
+        echo '    <div class="item">';
+        echo '      <input type="checkbox" name="' . $name . '" id="' . $id . '" value="' . $value . '"';  
+        if (isset($_REQUEST[$name])) {
+            echo ' checked';
+        } 
+        echo '>' . $amenity; 
+        echo '    </div>';
+    }
+
+    echo '  </div>';
+    echo '</div>';
+
+    echo '<TABLE>';
+
+    $criteria = ["accommodates", "bedrooms", "bathrooms", "beds", "price", "cleaning_fee"];
+
+    foreach ($criteria as $criterion) {
+        $label = ucwords(str_replace('_', ' ', $criterion));
+
+        echo '<tr>';
+        echo '  <td align="right">' . $label . '</td>';
+        echo '  <td>';
+        echo '    <input type="radio" name="sort_' . $criterion . '" value="No sorting"';
+        if ($_REQUEST['sort_' . $criterion] === "No sorting") {
+            echo ' checked';
+        }
+        echo '> No sorting,';
+        echo '    <input type="radio" name="sort_' . $criterion . '" value="Increasing"';
+        if ($_REQUEST['sort_' . $criterion] === "Increasing") {
+            echo ' checked';
+        }
+        echo '> Increasing,';
+        echo '    <input type="radio" name="sort_' . $criterion . '" value="Decreasing"';
+        if ($_REQUEST['sort_' . $criterion] === "Decreasing") {
+            echo ' checked';
+        }
+        echo '> Decreasing';
+        echo '  </td>';
+        echo '</tr>';
+        echo "\n";
+    }
+
+    echo '</TABLE>'; 
+}
+?>
 <TR><TD><INPUT type="submit" name="submit" id="submit" value="Search"></TD> 
 </FORM>	</TR>
 
