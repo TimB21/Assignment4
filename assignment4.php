@@ -208,20 +208,14 @@ $amenities[] = "toilet";
 
 <?php   
 if (!isset($_POST['submit'])) {
-// create array to store the fields with single textboxes
-$fields = [
-    "name",
-    "description",
-    "address.street",
-    "address.suburb",
-    "transit",
-    "property_type"
-];
+// create associative array to store the fields with single textboxes
+$fields = ["name","description","address.street","address.suburb","transit","property_type"];
 
 // loop to create html code for each field with a single textbox
-foreach ($fields as $field) {
+foreach ($fields as $field) { 
+    // Handle fields within the "address" category
     if (strpos($field, 'address.') === 0) {
-        // Handle fields within the "address" category
+        // Create subcategory
         $subcategory = str_replace('address.', '', $field);
         $category = 'address'; 
         echo '<tr>';
@@ -243,14 +237,7 @@ foreach ($fields as $field) {
 } 
 
 // create array to store the fields with two text boxes for a minimum and maximum value 
-$fields = [
-    "accommodates",
-    "bedrooms",
-    "bathrooms",
-    "beds",
-    "price",
-    "cleaning_fee"
-];
+$fields = ["accommodates","bedrooms","bathrooms","beds","price","cleaning_fee"];
 
 // create loop to create html code for each of the fields with two text boxes 
 foreach ($fields as $field) {
@@ -262,7 +249,7 @@ foreach ($fields as $field) {
     echo '</tr>';
 } 
 
-// create array for entities in the data which have multiple radioboxes
+// create associative array for the fields of data with have multiple radioboxes
 $fieldValues = [
     "address.country" => ["Any", "Australia", "Brazil", "Canada", "China", "Hong Kong", "Portugal", "Spain", "Turkey", "United States"],
     "room_type" => ["Any", "Entire home/apt", "Private room", "Shared room"],
@@ -296,11 +283,10 @@ echo '<div id="div2" style="max-height:100%;overflow:auto;border:1px solid black
 
 foreach ($amenities as $amenity) {
     $id = str_replace(' ', '_', $amenity); // Convert spaces to underscores for checkbox ID
-    $name = $id; // Convert spaces to underscores for checkbox name
     $value = "yes";
 
     echo '<div class="item">';
-    echo '  <input type="checkbox" name="' . $name . '" id="' . $id . '" value="' . $value . '">' . $amenity;
+    echo '  <input type="checkbox" name="' . $id . '" id="' . $id . '" value="' . $value . '">' . $amenity;
     echo '</div>';
 }
 
@@ -311,19 +297,12 @@ echo '</div>';
 echo '<TABLE>';
 
 // create an array for the sorting criteria 
-$criteria = ["accommodates", 
-             "bedrooms", 
-             "bathrooms", 
-             "beds", 
-             "price", 
-            "cleaning_fee"];
+$criteria = ["accommodates", "bedrooms", "bathrooms", "beds", "price", "cleaning_fee"];
 
 // loop through the sorting criteria and create radio boxes for different sorting options
 foreach ($criteria as $criterion) {
-    $label = ucwords(str_replace('_', ' ', $criterion));
-
     echo '<tr>';
-    echo '  <td align="right">' . $label . '</td>';
+    echo '  <td align="right">' . $criterion . '</td>';
     echo '  <td>';
     echo '    <input type="radio" name="sort_' . $criterion . '" value="No sorting" checked> No sorting,';
     echo '    <input type="radio" name="sort_' . $criterion . '" value="Increasing"> Increasing,';
@@ -336,19 +315,16 @@ echo '</TABLE>';
 }
 ?> 
 
-<?php 
-if (isset($_POST['submit'])) {
-    $fields = [
-        "name",
-        "description",
-        "address.street",
-        "address.suburb",
-        "transit",
-        "property_type"
-    ];
+<?php  
+// this section runs after the user has submitted the form
+if (isset($_POST['submit'])) { 
 
+    // create associative array to store the fields with single textboxes
+    $fields = ["name","description","address.street","address.suburb","transit","property_type"]; 
+
+    // loops through array and creates the textboxes with the inputted information if it was provided
     foreach ($fields as $field) {
-        if (strpos($field, 'address.') === 0) {
+        if (strpos($field, 'address.') === 0) { 
             $subcategory = str_replace('address.', '', $field);
             $category = 'address'; 
             echo '<tr>';
@@ -369,47 +345,47 @@ if (isset($_POST['submit'])) {
         }
     } 
 
-    $fields = [
-        "accommodates",
-        "bedrooms",
-        "bathrooms",
-        "beds",
-        "price",
-        "cleaning_fee"
-    ];
+    // create array to store the fields with two text boxes for a minimum and maximum value 
+    $fields = ["accommodates","bedrooms","bathrooms","beds","price","cleaning_fee"];
 
-    foreach ($fields as $field) {
+    // loops through array and creates the low and high textboxes with the inputted information if it was provided 
+    foreach ($fields as $field) { 
+        // begin creating tags
         echo '<tr>';
         echo '  <td align="right">' . $field . '</td>';
         echo '  <td>';
     
-        // Check if 'low' value is not empty
+    // check if 'low' value is not empty
     if (!empty($_REQUEST['low' . $field])) {
-        // Check if 'low' value is a valid number
+        // check if 'low' value is a valid number
         if (is_numeric($_REQUEST['low' . $field])) {
-            $lowValue = htmlspecialchars($_REQUEST['low' . $field]);
+            $lowValue = ($_REQUEST['low' . $field]);
 
-            // Ensure low is not less than 0
-            if ($lowValue <= 0) {
+            // ensure low is not less than or equal to 0
+            if ($lowValue <= 0) { 
+                // tell user that their input must be a valid number and clear the field
                 echo '<span style="color: red;">Low value cannot be less than or equal 0.</span>';
                 $lowValue = '';
-            }
-        } else {
+            } 
+
+        } else { 
+            // tell user that their input must be numeric and clear the field
             echo '<span style="color: red;">Low value must be numeric.</span>';
             $lowValue = '';
         }
-    } else {
+    } else { // runs if field is empty
         $lowValue = '';
     }
 
-    // Check if 'hi' value is not empty
+    // check if 'hi' value is not empty
     if (!empty($_REQUEST['hi' . $field])) {
-        // Check if 'hi' value is a valid number
+        // check if 'hi' value is a valid number
         if (is_numeric($_REQUEST['hi' . $field])) {
             $hiValue = htmlspecialchars($_REQUEST['hi' . $field]);
 
-            // Ensure high is not less than 0
-            if ($hiValue <= 0) {
+            // ensure high is not less than 0
+            if ($hiValue <= 0) { 
+                // tell user that their input must be a valid number and clear the field
                 echo '<span style="color: red;">High value cannot be less than or equal to 0.</span>';
                 $hiValue = '';
             }
@@ -419,22 +395,26 @@ if (isset($_POST['submit'])) {
         }
 
         // Ensure low is not greater than high
-        if ($lowValue !== '' && $hiValue !== '' && $lowValue > $hiValue) {
+        if ($lowValue !== '' && $hiValue !== '' && $lowValue > $hiValue) { 
+             // tell user that their input must be numeric and clear the field
             echo '<span style="color: red;">High value cannot be less than the low value.</span>';
             $hiValue = '';
-        }
-    } else {
+        } 
+    } else { 
+        // runs if no input was provided
         $hiValue = '';
     }
-    
+
+    // finish creating tags with correct field names and values
         echo '    between <input type="text" size="3" name="low' . $field . '" id="low' . $field . '" value="' . $lowValue . '" maxlength="5">';
         echo ' and <input type="text" size="3" name="hi' . $field . '" id="hi' . $field . '" value="' . $hiValue . '" maxlength="5">';
     
         echo '  </td>';
         echo '</tr>';
-        echo "\n"; 
     }
 
+
+    // create associative array for the radiobox fields
     $fieldValues = [
         "address.country" => ["Any", "Australia", "Brazil", "Canada", "China", "Hong Kong", "Portugal", "Spain", "Turkey", "United States"],
         "room_type" => ["Any", "Entire home/apt", "Private room", "Shared room"],
@@ -442,12 +422,16 @@ if (isset($_POST['submit'])) {
         "cancellation_policy" => ["Any", "flexible", "moderate", "strict_14_with_grace_period", "super_strict_30", "super_strict_60"]
     ];
 
+    // loop through the radio box fields and their values to create the html tags. 
+    // the radiobox selection will reflect the with user's selected radioboxes for these fields
     foreach ($fieldValues as $field => $values) {
         echo '<tr>';
         echo '  <td align="right">' . $field . '</td>';
         echo '  <td>';
-        foreach ($values as $value) {
+        foreach ($values as $value) {  
+            // str_replace makes sure the name and id are correctly formatted
             echo '    <input type="radio" name="' . str_replace('.', '_', $field) . '" id="' . str_replace('.', '_', $field) . '" value="' . $value . '"';
+            // updates radiobox to be selected if the user has chosen it 
             if ($_REQUEST[str_replace('.', '_', $field)] === $value) {
                 echo ' checked';
             }
@@ -455,7 +439,6 @@ if (isset($_POST['submit'])) {
         }
         echo '  </td>';
         echo '</tr>';
-        echo "\n";
     }
     
     echo '</TABLE>'; // Close the existing table after the amenities section
@@ -483,15 +466,19 @@ if (isset($_POST['submit'])) {
 
     echo '<TABLE>';
 
-    $criteria = ["accommodates", "bedrooms", "bathrooms", "beds", "price", "cleaning_fee"];
+    // create array for sorting criteria 
+    $criteria = ["accommodates", "bedrooms", "bathrooms", "beds", "price", "cleaning_fee"]; 
 
-    foreach ($criteria as $criterion) {
-        $label = ucwords(str_replace('_', ' ', $criterion));
+    // loop through criteria and create radio boxes for each 
+    // radio box will be selected if user selected it in the form
+    foreach ($criteria as $criterion) { 
+        $label = (str_replace('_', ' ', $criterion));
 
         echo '<tr>';
         echo '  <td align="right">' . $label . '</td>';
         echo '  <td>';
-        echo '    <input type="radio" name="sort_' . $criterion . '" value="No sorting"';
+        echo '    <input type="radio" name="sort_' . $criterion . '" value="No sorting"'; 
+        // if the field was selected, update the html tags to reflect this
         if ($_REQUEST['sort_' . $criterion] === "No sorting") {
             echo ' checked';
         }
