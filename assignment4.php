@@ -197,7 +197,6 @@ $amenities[] = "Wide hallway clearance";
 $amenities[] = "Wifi";
 $amenities[] = "Window guards";
 $amenities[] = "toilet";
-
 ?>
 
 <CENTER>
@@ -499,12 +498,147 @@ if (isset($_POST['submit'])) {
     }
 
     echo '</TABLE>'; 
-} 
-// Code for processing the query and displaying the results
-?>
+}  
+?>   
+
 <TR><TD><INPUT type="submit" name="submit" id="submit" value="Search"></TD> 
 </FORM>	</TR>
 
-</CENTER>
+</CENTER> 
 
+<?php
+// Steps of aggregation pipeline
+$match = array();
+$sort = array();
+
+// Will represent a MQL query
+$query = array(); 
+
+if (isset($_POST['submit'])) {
+    $fields = ["name", "description", "address.street", "address.suburb", "transit", "property_type"];
+
+    foreach ($fields as $field) {
+        if (isset($_POST[$field]) && !empty($_POST[$field])) {
+            // Form the MongoDB query for the current field
+            $match[$field] = ['$regex' => $_POST[$field]];
+        }
+    }
+
+    $fields = ["accommodates", "bedrooms", "bathrooms", "beds", "price", "cleaning_fee"];
+
+    // Loop through array and create the low and high textboxes with the inputted information if provided
+    foreach ($fields as $field) {
+        // Initialize variables
+        $low = 'low' . $field;
+        $hi = 'high' . $field;
+
+        // check if 'low' value is not empty
+        if (!empty($_POST[$low])) {
+            $match[$field]['$gte'] = intval($_POST[$low]);
+        }
+
+        // check if 'hi' value is not empty
+        if (!empty($_POST[$hi])) {
+            $match[$field]['$lte'] = intval($_POST[$hi]);
+        }
+    }
+
+    // Associative array for radiobox fields
+    $fieldValues = [
+        "address.country" => ["Any", "Australia", "Brazil", "Canada", "China", "Hong Kong", "Portugal", "Spain", "Turkey", "United States"],
+        "room_type" => ["Any", "Entire home/apt", "Private room", "Shared room"],
+        "bed_type" => ["Any", "Futon", "Airbed", "Pull-out Sofa", "Real Bed", "Couch"],
+        "cancellation_policy" => ["Any", "flexible", "moderate", "strict_14_with_grace_period", "super_strict_30", "super_strict_60"]
+    ];
+
+    foreach ($fieldValues as $field => $values) {
+        // Check if the radio button for the field is set in $_POST
+        if (isset($_POST[$field]) && $_POST[$field] != 'Any') {
+            // Form the MongoDB query for the current field
+            $match[$field] = $_POST[$field];
+        }
+    }
+
+
+
+    // Connection string for my MongoDB database
+    $uri = "mongodb+srv://student:SUstudent_in_DatabaseFall2023@schrumsu.tbf3xyo.mongodb.net/?retryWrites=true&w=majority";
+
+    if (!empty($match) || !empty($sort)) {
+    
+        // Specify Stable API version 1
+        $apiVersion = new ServerApi(ServerApi::V1);
+    
+        // Create a new client and connect to the server
+        $client = new MongoDB\Client($uri, [], ['serverApi' => $apiVersion]);
+    
+        // Select the database and collection
+        $database = $client->selectDatabase("sample_airbnb");
+        $collection = $database->selectCollection("listingsAndReviews");
+    
+        // Contains all queries within the aggregation pipeline
+        $pipeline = array();
+    
+        // If the match conditions are provided, add them to the pipeline
+        if (!empty($match)) {
+            // Decode the match conditions
+            $decodedMatch = json_decode(json_encode($match), true);
+
+            // Check if decoding was successful
+            if ($decodedMatch !== null) {
+                $pipeline[] = ['$match' => $decodedMatch];
+            } else {
+                echo 'Invalid match conditions'; // Handle the error as needed
+            }
+        }
+
+        // If the sort conditions are provided, add them to the pipeline
+        if (!empty($sort)) {
+            // Decode the sort conditions
+            $decodedSort = json_decode(json_encode($sort), true);
+
+            // Check if decoding was successful
+            if ($decodedSort !== null) {
+                $pipeline[] = ['$sort' => $decodedSort];
+            } else {
+                echo 'Invalid sort conditions'; // Handle the error as needed
+            }
+        }
+    
+        echo '<BR><BR>Full Pipeline</BR>';
+        var_dump($pipeline); // For debugging 
+        
+        echo '<BR><BR>Var Dump</BR>'; 
+        var_dump($_POST);
+    
+        if(!empty($pipeline)) {
+            // Send query to MongoDB
+            $queryResult = $collection->aggregate($pipeline);
+    
+            $divNum = 0;
+            // Display the results
+            foreach ($queryResult as $document) {
+                // The JavaScript code neatly displays the JSON objects using the renderjson.js library
+    ?>
+    
+        <div id="test<?= $divNum ?>"></div>
+        <HR>
+        <script type="text/javascript" src="renderjson.js"></script>
+        <script>
+        var example = <?= json_encode($document) ?>;
+    
+        renderjson.set_show_to_level(1);
+        document.getElementById("<?= "test".$divNum ?>").appendChild(renderjson(example));
+        </script>
+    
+    <?php
+                $divNum++;
+            }
+        }
+    } 
+}
+    ?>
+    
+    
+    
 
